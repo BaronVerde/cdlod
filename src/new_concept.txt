@@ -1,0 +1,46 @@
+
+heightmap
+a.) Load and unload relevant tiles of the whole map
+b.) Which heightmap parts to load ? Flag in selected node ?
+
+quadtree
+a.) A single quadtree.
+b.) Raster size POT.
+c.) Raster-to-world for linear conversion
+
+node:
+a.) Position in raster-(quadtree-)space for indexing.
+	min: quadtree origin + node min.
+	max: quadtree origin + node min + node size.
+b.) Position in world-space for selection.
+	min: raster_min * raster_to_world
+	max: raster_max * raster_to_world
+c.) Height values in world aabb's. How ?
+	- quadtree min/max (too coarse)
+	- precalc min/max (node size must be known during precalc)
+	- lookup during selection (too slow)
+	- do a min_max_map for given leaf node size
+
+terrain_lod
+a.) The terrain renderer
+	controls quadtree, lod_selection, heightmap_source
+
+Coordinate systems:
+1.) quadtree
+
+2.) heightmap tile
+	n*n make the quadtree. POT.
+	Addressing raster space: same as quadtree, but check if   
+3.) world
+	Coordinate of quadtree origin (min).
+	Coordinate of tile origin for test.
+	raster_to_world in x and z.
+	Addressing in world space:
+	quadtree origin + tile origin + pos 
+
+
+- memoria tecnica
+- oficina fiscal/laboral
+- compensacion terreno
+- 
+
