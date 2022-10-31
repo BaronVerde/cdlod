@@ -40,14 +40,11 @@ void node::create(
 		const unsigned int limit_z = std::min( h_map->get_extent().y, z + size );
 		min_max_height = h_map->get_min_max_height_area( x, z, limit_x - x, limit_z - z );
 	}
-	// Get bounding box in raster coords for smaller storage.
+	// TODO Get bounding box in world coords.
 	const omath::aabb box = h_map->get_raster_aabb();
-	m_aabb.m_min.x = box.m_min.x + (float)m_x;
-	m_aabb.m_min.y = min_max_height.x;
-	m_aabb.m_min.z = box.m_min.z + (float)m_z;
-	m_aabb.m_max.x = box.m_min.x + float(m_x + size);
-	m_aabb.m_max.y = min_max_height.y;
-	m_aabb.m_max.z = box.m_min.z + float(m_z + size);
+	const omath::vec3 min{ box.m_min.x + (float)m_x, min_max_height.x, box.m_min.z + (float)m_z };
+	const omath::vec3 max{ box.m_min.x + float(m_x + size), min_max_height.y, box.m_min.z + float(m_z + size) };
+	m_aabb = omath::aabb{ min, max };
 	// Highest level reached already ?
 	if( size == settings::LEAF_NODE_SIZE ) {
 		if( level != settings::NUMBER_OF_LOD_LEVELS -1 ) {
@@ -90,18 +87,13 @@ unsigned int node::get_level() const {
 	return m_level & 0x7FFFFFFF;
 }
 
-const omath::aabb &node::get_raster_aabb() const {
+const omath::aabb &node::get_aabb() const {
 	return m_aabb;
 }
 
-omath::daabb &node::get_world_aabb(omath::daabb &out_box) const {
-	out_box.m_min.x = m_aabb.m_min.x * settings::RASTER_TO_WORLD_X;
-	out_box.m_min.y = m_aabb.m_min.y;
-	out_box.m_min.z = m_aabb.m_min.z * settings::RASTER_TO_WORLD_Z;
-	out_box.m_max.x = m_aabb.m_max.x * settings::RASTER_TO_WORLD_X;
-	out_box.m_max.y = m_aabb.m_max.y;
-	out_box.m_max.z = m_aabb.m_max.z * settings::RASTER_TO_WORLD_Z;
-	return out_box;
+void node::get_world_aabb(omath::daabb &box) const {
+	box.m_min = omath::dvec3(m_aabb.m_min) * omath::dvec3( settings::RASTER_TO_WORLD_X, 1.0, settings::RASTER_TO_WORLD_Z );
+	box.m_max = omath::dvec3(m_aabb.m_max) * omath::dvec3( settings::RASTER_TO_WORLD_X, 1.0, settings::RASTER_TO_WORLD_Z );
 }
 
 const node *node::get_tr() const {
@@ -145,7 +137,7 @@ omath::t_intersect node::lod_select( lod_selection *lodSelection, bool parentCom
 	// Stop at one below number of lod levels
 	if( get_level() != lodSelection->m_stop_at_level ) {
 		const double nextDistanceLimit = lodSelection->m_visibility_ranges[get_level()+1];
-		if( world_aabb.intersect_sphere_sq( cam->get_position(), nextDistanceLimit * nextDistanceLimit ) ) {
+		if( m_aabb.intersect_sphere_sq( cam->get_position(), nextDistanceLimit * nextDistanceLimit ) ) {
 			bool weAreCompletelyInFrustum = frustumIntersection == omath::INSIDE;
 			if( m_tl != nullptr )
 				subTLSelRes = m_tl->lod_select( lodSelection, weAreCompletelyInFrustum );
@@ -166,10 +158,8 @@ omath::t_intersect node::lod_select( lod_selection *lodSelection, bool parentCom
 	bool removeSubBR = (subBRSelRes == omath::OUTSIDE) || (subBRSelRes == omath::SELECTED);
 
 	if( lodSelection->m_selection_count >= settings::MAX_NUMBER_SELECTED_NODES ) {
-		logbook::log_msg(
-				logbook::TERRAIN, logbook::WARNING,
-				"LOD selected more nodes than the maximum selection count. Some nodes will not be drawn."
-		);
+		std::string s{ "LOD selected more nodes than the maximum selection count. Some nodes will not be drawn." };
+		logbook::log_msg( logbook::TERRAIN, logbook::WARNING, s );
 		return omath::OUTSIDE;
 	}
 	// Add node to selection
@@ -185,7 +175,7 @@ omath::t_intersect node::lod_select( lod_selection *lodSelection, bool parentCom
 		// Check if we get problems with lod distnce ranges.
 		// F.Strugar says: This should be calculated somehow better, but brute force will work for now.
 		if( settings::DEBUG_HIGHLIGHT_SHORT_VISIBILITY_BOXES && !lodSelection->m_vis_dist_too_small && (get_level() != 0) ) {
-			const double maxDistFromCam = std::sqrt( world_aabb.max_distance_from_point_sq( cam->get_position() ) );
+			const double maxDistFromCam = std::sqrt( m_aabb.max_distance_from_point_sq( cam->get_position() ) );
 			const double morphStartRange = lodSelection->m_morph_start[lodSelection->m_stop_at_level - get_level()+1];
 			if( maxDistFromCam > morphStartRange ) {
 				lodSelection->m_vis_dist_too_small = true;

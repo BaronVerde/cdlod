@@ -58,9 +58,9 @@ bool quadtree::create() {
 	// Debug output
 	std::ostringstream s;
 	// Quad tree summary
-	float sizeInMemory = (float)m_nodeCount * (sizeof(node) + sizeof(omath::aabb) ) / 1024.0f;
-	s << "Quadtree created; " << m_nodeCount << " nodes; size in memory: " << sizeInMemory <<
-		"kB." << m_topNodeCountX << '*' << m_topNodeCountZ << " top nodes.";
+	float sizeInMemory = (float)m_nodeCount * ( sizeof( node ) + sizeof( omath::aabb ) );
+	s << "Quad tree created " << m_nodeCount << " Nodes; size in memory: " << ( sizeInMemory / 1024.0f ) <<
+		"kB.\n\t" << m_topNodeCountX << '*' << m_topNodeCountZ << " top nodes.";
 	logbook::log_msg( logbook::TERRAIN, logbook::INFO, s.str() );
 	// Debug: List of all Nodes
 	if( settings::DEBUG_OUTPUT_TREE_NODES )
@@ -106,9 +106,9 @@ void quadtree::debug_output_nodes() const {
 	std::ostringstream s;
 	for( unsigned int i=0; i < m_nodeCount; ++i ) {
 		s.str( std::string() );
-		node *n = &m_allNodes[i];
-		omath::aabb box;
-		s << "Node " << i << " Level " << n->get_level() << " Raster aabb " << n->get_raster_aabb();
+		node *n{ &m_allNodes[i] };
+		omath::daabb box; n->get_world_aabb(box);
+		s << "Node " << i << " Level " << n->get_level() << " BB " << box;
 		if( n->is_leaf() )
 			s << "; is leaf node.";
 		else {

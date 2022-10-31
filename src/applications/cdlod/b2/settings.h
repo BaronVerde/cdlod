@@ -21,12 +21,11 @@ const GLuint GRIDMESH_VERTEX_BUFFER_BINDING_INDEX = 11;
 // Output the list of all generated notes during quadtree creation to the log file.
 const bool DEBUG_OUTPUT_TREE_NODES = false;
 // Output the list of morph levels and ranges when they are (re-)calculated.
-const bool DEBUG_OUTPUT_MORPH_LEVELS = true;
+const bool DEBUG_OUTPUT_MORPH_LEVELS = false;
 /* When drawing the selection, highlight with a thick red frame boxes with
  * a too short visibility range. Could be areas where lod-ing isn't done correctly.
  * To avoid: adjust number of levels, terrain size or camera view range */
 const bool DEBUG_HIGHLIGHT_SHORT_VISIBILITY_BOXES = true;
-
 /* The size of the quadtree in raster units. .y ist the height.
  * The quadtree can get very large. Its origin (usually 0,0,0) and size are defined here.
  * Must be power of two. */
@@ -38,26 +37,17 @@ const omath::uvec3 RASTER_MAX = { 4096,0,4096 };
 const bool FAST_TREE_GENERATION = true;
 /* A multiplier to apply for the conversion between raster space and world space.
  * Can be seen as the distance between posts in m if height steps are 1m */
-const double RASTER_TO_WORLD_X = 90.0;
-const double RASTER_TO_WORLD_Z = 90.0;
+const double RASTER_TO_WORLD_X = 1.0;
+const double RASTER_TO_WORLD_Z = 1.0;
 // Use half floats for the heightmap textures. Faster, less, memory on the GPU, evtl. precision problems.
 const bool USE_HALF_FLOATS = true;
 /* This is applied directly to the value reead from the heightmap data (heightmap::getHeightAt()).
  * Should correspond to raster size and raster to world conversion, or else too steep/flat the terrain. */
-const float HEIGHT_FACTOR = 1.0f;
+const float HEIGHT_FACTOR = 0.1f;
 /* The size of a leaf node of the quadtree. Together with the raster size and number of levels this determines
  * how many nodes there will be. On a quadtree of size 256 (unrealistic, just an example) with 4 levels the
  * leaf nodes would have a size of 32. Also has performance implications. Many small nodes will render slower.
  * Must be power of 2 and > 2. Recommendation: keep it somewhere between 16 and 256. */
-const unsigned int MAX_LOD_LEVEL_COUNT = 15;
-/* Number of lod levels used in this case. Big quadtrees and small node sizes require more levels.
- * Should fit the size of the quadtree and the camera depth range. Calculation of lod level ranges
- * and the ranges for the smooth transitions between them is done on their base.
- * Extreme example: If there 10 levels on a camera range of 1000 that won't work.
- * TODO implement a mechanism to show nodes that fall out of clean transition */
-const unsigned int NUMBER_OF_LOD_LEVELS = 5;
-// For performance, memory is reserved for so many nodes. More will not be rendered.
-
 const unsigned int LEAF_NODE_SIZE = 64;
 /* This times leaf node size is the raster size of one patch of terrain, the gridmesh dimension.
  * Affects performance, try out how it works best for you. Recommendation not make it larger than 1024.
@@ -66,6 +56,14 @@ const unsigned int LEAF_NODE_SIZE = 64;
 const unsigned int RENDER_GRID_RESULUTION_MULT = 1;
 const unsigned int GRIDMESH_DIMENSION = LEAF_NODE_SIZE * RENDER_GRID_RESULUTION_MULT;
 // The maximum depth of the quadtree.
+const unsigned int MAX_LOD_LEVEL_COUNT = 15;
+/* Number of lod levels used in this case. Big quadtrees and small node sizes require more levels.
+ * Should fit the size of the quadtree and the camera depth range. Calculation of lod level ranges
+ * and the ranges for the smooth transitions between them is done on their base.
+ * Extreme example: If there 10 levels on a camera range of 1000 that won't work.
+ * TODO implement a mechanism to show nodes that fall out of clean transition */
+const unsigned int NUMBER_OF_LOD_LEVELS = 5;
+// For performance, memory is reserved for so many nodes. More will not be rendered.
 const unsigned int MAX_NUMBER_SELECTED_NODES = 1024;
 // TODO seperate view range for LOD and camera to be able to select shorter near/far planes
 // and still have LODding capabilities.

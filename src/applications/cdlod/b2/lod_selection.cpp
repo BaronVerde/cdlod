@@ -19,15 +19,15 @@ lod_selection::lod_selection( const camera *cam, bool sort ) :
 lod_selection::~lod_selection() {}
 
 void lod_selection::calculate_ranges() {
-	double total=0;
-	double current_detail_balance=1.0;
+	double total{ 0 };
+	double current_detail_balance{ 1.0f };
 	for( unsigned int i=0; i < settings::NUMBER_OF_LOD_LEVELS; ++i ) {
 		total += current_detail_balance;
 		current_detail_balance *= settings::LOD_LEVEL_DISTANCE_RATIO;
 	}
 	double sect{ ( m_camera->get_far_plane() - m_camera->get_near_plane() ) / total };
 	double prev_pos{ m_camera->get_near_plane() };
-	current_detail_balance = 1.0;
+	current_detail_balance = 1.0f;
 	for( unsigned int i=0; i < settings::NUMBER_OF_LOD_LEVELS; ++i ) {
 		// @todo why is this inverted ?
 		m_visibility_ranges[settings::NUMBER_OF_LOD_LEVELS - i - 1] = prev_pos + sect * current_detail_balance;
@@ -67,11 +67,11 @@ void lod_selection::set_distances_and_sort() {
 
 void lod_selection::print_selection() const {
 	std::ostringstream s;
-	s << "Selected node #: level / raster bounding box / distance from cam:";
 	for( unsigned int i = 0; i < m_selection_count; ++i ) {
 		const selected_node *n = &m_selected_nodes[i];
 		omath::daabb box; n->p_node->get_world_aabb(box);
-		s << "\n\t" << i << ": " << n->lod_level <<" / " <<	box << " / " << n->min_distance_to_camera;
+		s << "Selected node #" << i << " lod level " << n->lod_level <<" BB " <<
+			box << "; distance from cam " << n->min_distance_to_camera << '\n';
 	}
 	logbook::log_msg( logbook::TERRAIN, logbook::INFO, s.str() );
 }
@@ -95,10 +95,10 @@ bool lod_selection::selected_node::is_vis_dist_too_small() const {
 
 void lod_selection::debug_output_morph_levels() const {
 	std::ostringstream s;
-	s << "Lod levels and ranges: lvl: range / morph-start / morph-end ";
+	s << "Lod levels and ranges: lvl/range/start/end ";
 	for( unsigned int i=0; i < settings::NUMBER_OF_LOD_LEVELS; ++i ) {
-		s << "\n\t" << i << ": " << m_visibility_ranges[settings::NUMBER_OF_LOD_LEVELS - i - 1] <<
-				" / " << m_morph_start[i] << " / " << m_morph_end[i];
+		s << "\n\t" << i << '/' << m_visibility_ranges[settings::NUMBER_OF_LOD_LEVELS - i - 1] <<
+				'/' << m_morph_start[i] << '/' << m_morph_end[i];
 	}
 	logbook::log_msg( logbook::TERRAIN, logbook::INFO, s.str() );
 }

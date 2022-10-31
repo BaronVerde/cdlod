@@ -20,9 +20,9 @@ public:
 	 * LOD level equals 'settings::NUM_LOD_LEVELS - 1 - node::get_level()' */
 	unsigned int get_level() const;
 	unsigned int get_size() const;
-	const omath::aabb &get_raster_aabb() const;
 	// Get the aabb in world coordinates for selection.
-	omath::daabb &get_world_aabb(omath::daabb &out_box) const;
+	const omath::aabb &get_aabb() const;
+	void get_world_aabb(omath::daabb &box) const;
 	// Set a nodes height when heightmap data becomes available
 	void set_min_max_height();
 	//const omath::vec2 &get_min_max_height() const;

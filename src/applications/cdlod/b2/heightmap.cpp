@@ -13,9 +13,9 @@ using namespace orf_n;
 
 namespace terrain {
 
-// TODO checks in own function, box making also.
 heightmap::heightmap( const std::string &filename, const bit_depth depth ) :
 				m_filename(filename), m_bit_depth(depth) {
+
 	uint16_t *values_16{nullptr};
 	uint8_t *values_8{nullptr};
 	//stbi_set_flip_vertically_on_load( true );
@@ -68,7 +68,6 @@ heightmap::heightmap( const std::string &filename, const bit_depth depth ) :
 	float size_in_kb{
 		float( sizeof(*this) + numPixels * sizeof(uint16_t) ) / 1024.0f
 	};
-	// Bounding boxes
 	std::ifstream bbf( filename+".bb", std::ios::in );
 	if( !bbf.is_open() ) {
 		std::ostringstream s;
@@ -81,9 +80,9 @@ heightmap::heightmap( const std::string &filename, const bit_depth depth ) :
 	m_raster_aabb.m_min = omath::vec3{ min.x, min.y * settings::HEIGHT_FACTOR, min.z };
 	m_raster_aabb.m_max = omath::vec3{ max.x, max.y * settings::HEIGHT_FACTOR, max.z };
 	std::ostringstream s;
-	s << "Heightmap texture '" << texture_file<<"' loaded.\n\tRaster bounding box: " << m_raster_aabb <<
-		".\n\tTexture unit " << HEIGHTMAP_TEXTURE_UNIT <<", " << m_extent.x <<'*'<< m_extent.y << ", " <<
-		num_channels <<" channel(s). Size in memory : " << size_in_kb << "kB.";
+	s << "Heightmap texture '" << texture_file<<"' loaded. Raster bounding box: " << m_raster_aabb << ".\n"<<
+		"\tTexture unit " << HEIGHTMAP_TEXTURE_UNIT <<", " << m_extent.x <<'*'<< m_extent.y << ", " << num_channels <<
+		" channel(s). Size in memory : " << size_in_kb << "kB.";
 	logbook::log_msg( logbook::TERRAIN, logbook::INFO, s.str() );
 }
 
@@ -119,16 +118,6 @@ const heightmap::bit_depth &heightmap::get_depth() const {
 
 const omath::aabb &heightmap::get_raster_aabb() const {
 	return m_raster_aabb;
-}
-
-omath::daabb &heightmap::get_world_aabb(omath::daabb &out_box) const {
-	out_box.m_min.x = m_raster_aabb.m_min.x * settings::RASTER_TO_WORLD_X;
-	out_box.m_min.y = m_raster_aabb.m_min.y;
-	out_box.m_min.z = m_raster_aabb.m_min.z * settings::RASTER_TO_WORLD_Z;
-	out_box.m_max.x = m_raster_aabb.m_max.x * settings::RASTER_TO_WORLD_X;
-	out_box.m_max.y = m_raster_aabb.m_max.y;
-	out_box.m_max.z = m_raster_aabb.m_max.z * settings::RASTER_TO_WORLD_Z;
-	return out_box;
 }
 
 heightmap::~heightmap() {

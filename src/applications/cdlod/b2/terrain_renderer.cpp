@@ -60,9 +60,9 @@ void terrain_renderer::setup() {
 
 	// Camera and selection object. Are connected because selection is based on view frustum and range.
 	// TODO parametrize or calculate initial position, direction and view range.
-	omath::daabb box; m_heightmap->get_world_aabb(box);
+	const omath::aabb box = m_heightmap->get_raster_aabb();
 	m_scene->get_camera()->set_position_and_target( box.m_max, box.m_min );
-	m_scene->get_camera()->set_near_plane( 1.0 );
+	m_scene->get_camera()->set_near_plane( 1.0f );
 	m_scene->get_camera()->set_far_plane( box.get_diagonal_size() );
 	m_scene->get_camera()->calculate_fov();
 
@@ -137,8 +137,10 @@ void terrain_renderer::render(const double deltatime) {
 	setViewProjectionMatrix( cam->get_view_perspective_matrix() );
 	set_uniform( p, "debugColor", color::white );
 	set_uniform( p, "u_camera_position", omath::vec3(cam->get_position()) );
-	GLint drawMode = ( cam->get_wireframe_mode() ? GL_LINES : GL_TRIANGLES );
-	omath::daabb box; m_heightmap->get_world_aabb(box);
+	// Draw tile by tile
+	GLint drawMode{ cam->get_wireframe_mode() ? GL_LINES : GL_TRIANGLES };
+	// TODO These are now world coords. Set tile world coords instead of raster.
+	const omath::aabb box = m_heightmap->get_raster_aabb();
 	set_uniform( p, "g_tileMax", omath::vec2{ box.m_max.x, box.m_max.z } );
 	set_uniform( p, "g_tileScale", omath::vec3{ box.m_max - box.m_min } );
 	set_uniform( p, "g_tileOffset", omath::vec3{ box.m_min } );
@@ -150,6 +152,7 @@ void terrain_renderer::render(const double deltatime) {
 	// Iterate through the lod selection's lod levels
 	for( unsigned int level = m_selection->m_min_selected_lod_level; level <= m_selection->m_max_selected_lod_level; ++level ) {
 		const unsigned int filterLODLevel = level;
+		// TODO: gridmesh is originally picked here. Why ?
 		unsigned int prevMorphConstLevelSet = UINT_MAX;
 		for( unsigned int i=0; i < m_selection->m_selection_count; ++i ) {
 			const lod_selection::selected_node &n = m_selection->m_selected_nodes[i];
@@ -239,23 +242,23 @@ void terrain_renderer::debugDrawing() {
 			bool drawFull = n.has_tl && n.has_tr && n.has_bl && n.has_br;
 			if( drawFull ) {
 				n.p_node->get_world_aabb(box);
-				m_draw_aabb.draw( box, color::rainbow[n.p_node->get_level()%6] );
+				m_draw_aabb.draw( box.expand( -0.003 ), color::rainbow[n.p_node->get_level()%6] );
 			} else {
 				if( n.has_tl ) {
 					n.p_node->get_tl()->get_world_aabb(box);
-					m_draw_aabb.draw( box,color::rainbow[n.p_node->get_tl()->get_level()%6] );
+					m_draw_aabb.draw( box.expand( -0.002 ),color::rainbow[n.p_node->get_tl()->get_level()%6] );
 				}
 				if( n.has_tr ) {
 					n.p_node->get_tr()->get_world_aabb(box);
-					m_draw_aabb.draw( box,color::rainbow[n.p_node->get_tr()->get_level()%6] );
+					m_draw_aabb.draw( box.expand( -0.002 ),color::rainbow[n.p_node->get_tr()->get_level()%6] );
 				}
 				if( n.has_bl ) {
 					n.p_node->get_bl()->get_world_aabb(box);
-					m_draw_aabb.draw( box, color::rainbow[n.p_node->get_bl()->get_level()%6] );
+					m_draw_aabb.draw( box.expand( -0.002 ), color::rainbow[n.p_node->get_bl()->get_level()%6] );
 				}
 				if( n.has_br ) {
 					n.p_node->get_br()->get_world_aabb(box);
-					m_draw_aabb.draw( box, color::rainbow[n.p_node->get_br()->get_level()%6] );
+					m_draw_aabb.draw( box.expand( -0.002 ), color::rainbow[n.p_node->get_br()->get_level()%6] );
 				}
 			}
 			if( settings::DEBUG_HIGHLIGHT_SHORT_VISIBILITY_BOXES && n.is_vis_dist_too_small() ) {

@@ -27,7 +27,7 @@ public:
 			const unsigned int x, const unsigned int z, const unsigned int w, const unsigned int h
 	) const;
 	const omath::aabb &get_raster_aabb() const;
-	omath::daabb &get_world_aabb(omath::daabb &out_box) const;
+	const omath::aabb &get_world_aabb() const;
 
 private:
 	std::string m_filename{ "" };
